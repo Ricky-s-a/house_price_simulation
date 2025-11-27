@@ -1,0 +1,12 @@
+name: house_price_simulation
+title: house_price_simulation
+username: rikiya12honda
+account: rikiya12honda
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 16172658
+bundleId: 11240585
+url: https://rikiya12honda.shinyapps.io/house_price_simulation/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE
