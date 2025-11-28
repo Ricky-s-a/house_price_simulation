@@ -224,7 +224,26 @@ analysisServer <- function(id, sim_data, input_params, sim_name_trigger) {
     }
     
     # --- Outputs ---
-    output$initial_cash_val <- renderText({ p <- input_params(); initial_cost <- (p$price * 10000 * p$initial_cost_rate / 100) + (p$down_payment * 10000); paste0("-", format(round(initial_cost / 10000, 1), big.mark=","), " 万円") })
+    output$initial_cash_val <- renderText({ 
+      p <- input_params()
+      
+      # 諸費用計算
+      initial_cost_yen <- if(p$initial_cost_rate > 0) {
+        p$price * 10000 * p$initial_cost_rate / 100
+      } else {
+        0
+      }
+      
+      # オーバーローンの場合は頭金のみ、そうでなければ諸費用+頭金
+      initial_cash_out <- if(isTRUE(p$include_cost_in_loan)) {
+        p$down_payment * 10000
+      } else {
+        initial_cost_yen + (p$down_payment * 10000)
+      }
+      
+      paste0("-", format(round(initial_cash_out / 10000, 1), big.mark=","), " 万円") 
+    })
+    
     output$max_cf_detail <- renderUI({ df <- sim_data(); max_row <- df %>% dplyr::filter(Cumulative_Cash_Flow == max(Cumulative_Cash_Flow)) %>% dplyr::slice(1); render_detail_box(max_row, "万円") })
     output$cf_breakdown_text <- renderText({ df <- sim_data(); p <- input_params(); m_rent <- p$monthly_rent * 10000 * (p$occupancy_rate / 100); m_pay <- df$Total_Payment_Year[1] / 12; m_cost <- (p$mgmt_fee + p$repair_fund) * 10000; paste0(format(round(m_rent,0),big.mark=",")," (実効家賃) - ", format(round(m_pay,0),big.mark=",")," (返済) - ", format(round(m_cost,0),big.mark=",")," (管理修繕) = ", format(round(m_rent-m_pay-m_cost,0),big.mark=",")," 円") })
     output$irr_breakeven_detail <- renderUI({ df <- sim_data(); pos_row <- df %>% dplyr::filter(Estimated_IRR > 0) %>% dplyr::slice(1); if(nrow(pos_row) == 0) return(HTML("<div style='font-size: 0.9rem; color: white;'>期間内黒字化なし</div>")); irr_val <- paste0(sprintf("%.2f", pos_row$Estimated_IRR * 100), "%"); render_detail_box(pos_row, irr_val) })
