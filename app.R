@@ -110,8 +110,7 @@ ui <- page_sidebar(
   ),
   
   layout_columns(
-    col_widths = c(12, 12),
-    kpiUI("kpi_module"),
+    col_widths = 12,
     analysisUI("analysis_module")
   )
 )
@@ -381,7 +380,6 @@ server <- function(input, output, session) {
   })
   
   # モジュール連携
-  kpiServer("kpi_module", sim_data, input_params)
   analysisServer("analysis_module", sim_data, input_params, reactive(input$sim_name))
 }
 

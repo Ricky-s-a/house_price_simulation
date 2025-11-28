@@ -12,6 +12,121 @@ analysisUI <- function(id) {
       title = "詳細分析レポート",
       full_screen = TRUE,
       
+      # [0] サマリー (Dashboard)
+      nav_panel(
+        title = "サマリー (Dashboard)",
+        icon = icon("dashboard"),
+        
+        card_body(
+          fill = FALSE,
+          card_header("投資ハイライト"),
+          
+          layout_columns(
+            col_widths = c(6, 6),
+            fill = FALSE,
+            value_box(
+              title = "初期投下資金", 
+              value = textOutput(ns("summary_initial_cash")), 
+              showcase = bsicons::bs_icon("wallet-fill"), 
+              theme = "danger", 
+              min_height = "180px",
+              p("諸経費 + 頭金")
+            ),
+            value_box(
+              title="損益分岐 (IRRプラス転換)", 
+              value=uiOutput(ns("summary_breakeven")), 
+              showcase=bsicons::bs_icon("sunrise"), 
+              theme="warning", 
+              min_height = "180px",
+              p("元本回収完了のタイミング")
+            )
+          ),
+          
+          layout_columns(
+            col_widths = c(6, 6),
+            fill = FALSE,
+            value_box(
+              title="最高効率 (Max IRR)", 
+              value=uiOutput(ns("summary_max_irr")), 
+              showcase=bsicons::bs_icon("stars"), 
+              theme="primary", 
+              min_height = "180px",
+              p("資金効率が最大となる売り時")
+            ),
+            value_box(
+              title = "最大利益 (Max Profit)", 
+              value = uiOutput(ns("summary_max_profit")), 
+              showcase = bsicons::bs_icon("graph-up-arrow"), 
+              theme = "success", 
+              min_height = "180px",
+              p("累積CF + 売却益が最大となる時点"),
+              p("※金利・管理費等を引いた純利益", style="font-size: 0.7rem; color: #ecf0f1;")
+            )
+          ),
+          
+          hr(),
+          card_header("基本指標 (Basic Indicators)"),
+          
+          layout_columns(
+            col_widths = c(4, 4, 4),
+            fill = FALSE,
+            value_box(
+              title = "表面利回り (Gross)",
+              value = textOutput(ns("summary_gross_yield")),
+              showcase = bsicons::bs_icon("percent"),
+              theme = "primary", # Dark blue-ish equivalent if possible, or primary
+              min_height = "180px",
+              p("※初期家賃ベース")
+            ),
+            value_box(
+              title = "実質利回り (Net/NOI)",
+              value = textOutput(ns("summary_net_yield")),
+              showcase = bsicons::bs_icon("clipboard-check"),
+              theme = "primary",
+              min_height = "180px",
+              p("経費・空室リスク控除後")
+            ),
+            value_box(
+              title = "月次収支 (初年度)",
+              value = textOutput(ns("summary_monthly_cf")),
+              showcase = bsicons::bs_icon("piggy-bank"),
+              theme = "success", # Green
+              min_height = "180px",
+              p("実効家賃 - (返済 + 管理修繕)")
+            )
+          ),
+          
+          layout_columns(
+            col_widths = c(4, 4, 4),
+            fill = FALSE,
+            value_box(
+              title = "初回 月々返済額",
+              value = textOutput(ns("summary_monthly_payment")),
+              showcase = bsicons::bs_icon("wallet2"),
+              theme = "warning", # Orange
+              min_height = "180px",
+              p("元本 + 利息")
+            ),
+            value_box(
+              title = "10年後 累積収益",
+              value = uiOutput(ns("summary_profit_10y")),
+              showcase = bsicons::bs_icon("graph-up"),
+              theme = "secondary", # Grey
+              min_height = "180px",
+              p("賃料総額 - (購入 - 売却)")
+            ),
+            value_box(
+              title = "完済時 (35年後) 収益",
+              value = uiOutput(ns("summary_profit_payoff")),
+              showcase = bsicons::bs_icon("trophy"),
+              theme = "success", # Green
+              min_height = "180px",
+              p("賃料総額 - (購入 - 売却)")
+            )
+          )
+        )
+      ),
+
       # [1] 収支・現金 (Cash/PL)
       nav_panel(
         title = "収支・現金 (Cash/PL)",
@@ -24,7 +139,7 @@ analysisUI <- function(id) {
           card_header("手元資金の推移 (累積キャッシュフロー)"),
           
           layout_columns(
-            col_widths = c(6, 6),
+            col_widths = c(4, 4, 4),
             # 【修正ポイント 2】 fill = FALSE で高さをコンテンツに合わせる
             fill = FALSE, 
             
@@ -33,16 +148,25 @@ analysisUI <- function(id) {
               value = textOutput(ns("initial_cash_val")), 
               showcase = bsicons::bs_icon("wallet-fill"), 
               theme = "danger", 
-              min_height = "180px", # heightではなくmin_heightに変更
+              min_height = "200px", 
               p("諸経費 + 頭金")
+            ),
+            value_box(
+              title="IRRプラス転換 (損益分岐)", 
+              value=uiOutput(ns("irr_breakeven_detail_cash")), 
+              showcase=bsicons::bs_icon("sunrise"), 
+              theme="warning", 
+              min_height="200px", 
+              p("これ以前に売却すると元本割れ", style="font-size: 0.8rem; color: #ffffff;")
             ),
             value_box(
               title = "最終到達額 (CFピーク時)", 
               value = uiOutput(ns("max_cf_detail")), 
               showcase = bsicons::bs_icon("arrow-up-circle"), 
               theme = "success", 
-              min_height = "180px", # heightではなくmin_heightに変更
-              p("計算式: 累積CF + (売却額 - 残債)", style="font-size: 0.8rem; margin-top: 5px; color: #ecf0f1;")
+              min_height = "200px", 
+              p("計算式: 累積CF + (売却額 - 残債)", style="font-size: 0.8rem; margin-top: 5px; color: #ecf0f1;"),
+              p("※金利・管理費等を引いた手残り", style="font-size: 0.7rem; color: #ecf0f1;")
             )
           ),
           
@@ -76,8 +200,9 @@ analysisUI <- function(id) {
             card(card_header("売却時の内部収益率 (IRR) 推移"), plotOutput(ns("irr_plot"), height="350px")),
             
             # ここも潰れないように fill = FALSE
+            # ここも潰れないように fill = FALSE
             layout_columns(
-              col_widths = c(6, 6),
+              col_widths = c(4, 4, 4),
               fill = FALSE, 
               
               value_box(
@@ -85,18 +210,25 @@ analysisUI <- function(id) {
                 value=uiOutput(ns("irr_breakeven_detail")), 
                 showcase=bsicons::bs_icon("sunrise"), 
                 theme="warning", 
-                min_height="200px", # min_heightに変更
-                p("これ以前に売却すると元本割れ", style="font-size: 0.8rem; color: #ffffff;"), 
-                p("計算式: 累積CF + (売却額 - 残債)", style="font-size: 0.7rem; margin-top: 2px; color: #ffffff;")
+                min_height="200px", 
+                p("これ以前に売却すると元本割れ", style="font-size: 0.8rem; color: #ffffff;")
               ),
               value_box(
                 title="最高効率点 (Max IRR)", 
                 value=uiOutput(ns("irr_max_detail")), 
                 showcase=bsicons::bs_icon("stars"), 
                 theme="primary", 
-                min_height="200px", # min_heightに変更
-                p("資金効率が最も良くなる売り時", style="font-size: 0.8rem; color: #ecf0f1;"), 
-                p("計算式: 累積CF + (売却額 - 残債)", style="font-size: 0.7rem; margin-top: 2px; color: #ecf0f1;")
+                min_height="200px", 
+                p("資金効率が最も良くなる売り時", style="font-size: 0.8rem; color: #ecf0f1;")
+              ),
+              value_box(
+                title = "最終到達額 (Max IRR時)", 
+                value = uiOutput(ns("max_irr_exit_detail_bs")), 
+                showcase = bsicons::bs_icon("check-circle-fill"), 
+                theme = "success", 
+                min_height = "200px", 
+                p("最高効率点で売却した場合の手残り", style="font-size: 0.8rem; margin-top: 5px; color: #ecf0f1;"),
+                p("※金利・管理費等を引いた純利益", style="font-size: 0.7rem; color: #ecf0f1;")
               )
             )
           )
@@ -168,11 +300,24 @@ analysisUI <- function(id) {
               )
             ),
             
-            # パネル5: マンション収益
+            # パネル5: マンション収益 (完済時収益)
             card(
-              card_header("5. マンション収益 (Total Profit)"),
+              card_header("5. 完済時収益 / マンション収益 (Total Profit)"),
               card_body(
-                p("説明文: 運用期間中の「累積キャッシュフロー」と、売却時の「手残り金額（売却額 - 残債）」の合計。投資全体での最終的な損益額を表します。"),
+                p("説明文: 投資期間終了（ローン完済時など）までに得られる「トータルの純利益」です。"),
+                tags$ul(
+                  tags$li("「毎月の家賃収入の積み上げ (インカム)」と「売却時の手残り (キャピタル)」の合計です。"),
+                  tags$li("初期投資（頭金・諸費用）はすでに回収した上での、純粋なプラス分を表します。"),
+                  tags$li("つまり、この金額がプラスであれば「投資によってこれだけ資産が増えた（お得だった）」と言えます。")
+                ),
+                hr(),
+                p(style="font-weight: bold;", "よくある疑問: 「家賃総額 + (売却額 - 購入額)」と何が違う？"),
+                p("単純な売買差益や家賃総取りではなく、以下の「見えないコスト」をすべて差し引いた【真の手残り】を計算しています。"),
+                tags$ul(
+                  tags$li(tags$strong("ローン金利 (Interest):"), " 借入期間中の利息支払い合計。長期ローンでは大きな金額になります。"),
+                  tags$li(tags$strong("管理費・修繕積立金 (Running Cost):"), " 毎月の支出として家賃収入から差し引かれます。"),
+                  tags$li(tags$strong("購入時諸費用 (Initial Cost):"), " 仲介手数料や登記費用などもコストとして計上されます。")
+                ),
                 div("$$Profit = CumulativeCF + (Price_{sell} - Loan_{balance})$$"),
                 p(class="text-muted small", "※ 税引前の金額です。実際の利益はここから譲渡所得税等が引かれます。")
               )
@@ -245,9 +390,85 @@ analysisServer <- function(id, sim_data, input_params, sim_name_trigger) {
     })
     
     output$max_cf_detail <- renderUI({ df <- sim_data(); max_row <- df %>% dplyr::filter(Cumulative_Cash_Flow == max(Cumulative_Cash_Flow)) %>% dplyr::slice(1); render_detail_box(max_row, "万円") })
+    output$max_cf_detail_bs <- renderUI({ df <- sim_data(); max_row <- df %>% dplyr::filter(Cumulative_Cash_Flow == max(Cumulative_Cash_Flow)) %>% dplyr::slice(1); render_detail_box(max_row, "万円") })
+    output$max_irr_exit_detail_bs <- renderUI({ df <- sim_data(); max_row <- df %>% dplyr::filter(Estimated_IRR == max(Estimated_IRR, na.rm=TRUE)) %>% dplyr::slice(1); if(nrow(max_row) == 0) return(NULL); render_detail_box(max_row, "万円") })
+    
     output$cf_breakdown_text <- renderText({ df <- sim_data(); p <- input_params(); m_rent <- p$monthly_rent * 10000 * (p$occupancy_rate / 100); m_pay <- df$Total_Payment_Year[1] / 12; m_cost <- (p$mgmt_fee + p$repair_fund) * 10000; paste0(format(round(m_rent,0),big.mark=",")," (実効家賃) - ", format(round(m_pay,0),big.mark=",")," (返済) - ", format(round(m_cost,0),big.mark=",")," (管理修繕) = ", format(round(m_rent-m_pay-m_cost,0),big.mark=",")," 円") })
+    
     output$irr_breakeven_detail <- renderUI({ df <- sim_data(); pos_row <- df %>% dplyr::filter(Estimated_IRR > 0) %>% dplyr::slice(1); if(nrow(pos_row) == 0) return(HTML("<div style='font-size: 0.9rem; color: white;'>期間内黒字化なし</div>")); irr_val <- paste0(sprintf("%.2f", pos_row$Estimated_IRR * 100), "%"); render_detail_box(pos_row, irr_val) })
+    output$irr_breakeven_detail_cash <- renderUI({ df <- sim_data(); pos_row <- df %>% dplyr::filter(Estimated_IRR > 0) %>% dplyr::slice(1); if(nrow(pos_row) == 0) return(HTML("<div style='font-size: 0.9rem; color: white;'>期間内黒字化なし</div>")); irr_val <- paste0(sprintf("%.2f", pos_row$Estimated_IRR * 100), "%"); render_detail_box(pos_row, irr_val) })
+    
     output$irr_max_detail <- renderUI({ df <- sim_data(); max_row <- df %>% dplyr::filter(Estimated_IRR == max(Estimated_IRR, na.rm=TRUE)) %>% dplyr::slice(1); if(nrow(max_row) == 0) return(NULL); irr_val <- paste0(sprintf("%.2f", max_row$Estimated_IRR * 100), "%"); render_detail_box(max_row, irr_val) })
+    
+    # Summary Tab Outputs (Duplicate logic for independent rendering)
+    output$summary_initial_cash <- renderText({ 
+      p <- input_params()
+      initial_cost_yen <- if(p$initial_cost_rate > 0) { p$price * 10000 * p$initial_cost_rate / 100 } else { 0 }
+      initial_cash_out <- if(isTRUE(p$include_cost_in_loan)) { p$down_payment * 10000 } else { initial_cost_yen + (p$down_payment * 10000) }
+      paste0("-", format(round(initial_cash_out / 10000, 1), big.mark=","), " 万円") 
+    })
+    output$summary_breakeven <- renderUI({ df <- sim_data(); pos_row <- df %>% dplyr::filter(Estimated_IRR > 0) %>% dplyr::slice(1); if(nrow(pos_row) == 0) return(HTML("<div style='font-size: 0.9rem; color: white;'>期間内黒字化なし</div>")); irr_val <- paste0(sprintf("%.2f", pos_row$Estimated_IRR * 100), "%"); render_detail_box(pos_row, irr_val) })
+    output$summary_max_irr <- renderUI({ df <- sim_data(); max_row <- df %>% dplyr::filter(Estimated_IRR == max(Estimated_IRR, na.rm=TRUE)) %>% dplyr::slice(1); if(nrow(max_row) == 0) return(NULL); irr_val <- paste0(sprintf("%.2f", max_row$Estimated_IRR * 100), "%"); render_detail_box(max_row, irr_val) })
+    output$summary_max_profit <- renderUI({ df <- sim_data(); max_row <- df %>% dplyr::filter(Cumulative_Cash_Flow == max(Cumulative_Cash_Flow)) %>% dplyr::slice(1); render_detail_box(max_row, "万円") })
+    
+    # --- Summary: Basic Indicators ---
+    output$summary_gross_yield <- renderText({
+      p <- input_params()
+      gross_yield <- (p$monthly_rent * 12) / p$price * 100
+      paste0(sprintf("%.2f", gross_yield), " %")
+    })
+    
+    output$summary_net_yield <- renderText({
+      p <- input_params()
+      # NOI = (Rent * Occupancy) - (Mgmt + Repair)
+      annual_rent <- p$monthly_rent * 12 * 10000
+      effective_rent <- annual_rent * (p$occupancy_rate / 100)
+      annual_cost <- (p$mgmt_fee + p$repair_fund) * 12 * 10000
+      noi <- effective_rent - annual_cost
+      net_yield <- noi / (p$price * 10000) * 100
+      paste0(sprintf("%.2f", net_yield), " %")
+    })
+    
+    output$summary_monthly_cf <- renderText({
+      df <- sim_data()
+      val <- df$Monthly_Net_Cash_Flow[1]
+      paste0(format(round(val, 0), big.mark=","), " 円")
+    })
+    
+    output$summary_monthly_payment <- renderText({
+      df <- sim_data()
+      val <- df$Monthly_Payment_Example[1]
+      paste0(format(round(val, 0), big.mark=","), " 円")
+    })
+    
+    output$summary_profit_10y <- renderUI({
+      df <- sim_data()
+      target_row <- df %>% dplyr::filter(Year == 10)
+      if(nrow(target_row) == 0) return(HTML("<div style='color:white;'>データなし</div>"))
+      
+      val <- target_row$Mansion_Profit[1]
+      HTML(paste0("<div style='font-size: 1.5rem; font-weight: bold; color: white;'>", format(round(val/10000, 0), big.mark=","), " 万円</div>"))
+    })
+    
+    output$summary_profit_payoff <- renderUI({
+      df <- sim_data()
+      p <- input_params()
+      # 完済時（ローン期間終了時）またはシミュレーション最終年
+      target_year <- p$loan_years
+      target_row <- df %>% dplyr::filter(Year == target_year)
+      
+      # もしローン期間より短いシミュレーションなら最終行
+      if(nrow(target_row) == 0) {
+        target_row <- df %>% dplyr::slice(n())
+        label_text <- paste0(target_row$Year, "年後")
+      } else {
+        label_text <- paste0(target_year, "年後")
+      }
+      
+      val <- target_row$Mansion_Profit[1]
+      HTML(paste0("<div style='font-size: 1.5rem; font-weight: bold; color: white;'>", format(round(val/10000, 0), big.mark=","), " 万円</div>"))
+    })
+    
     output$cagr_info <- renderText({ p <- input_params(); if(p$drop_type=="target_price"){ paste0("CAGR: ", sprintf("%.2f", attr(sim_data(),"implied_rate")*100), "%") }else "" })
     
     # CSV Download
