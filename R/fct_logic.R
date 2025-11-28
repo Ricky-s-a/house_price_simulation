@@ -54,7 +54,11 @@ calculate_amortization <- function(principal, interest_rate, years, method) {
 }
 
 run_simulation_logic <- function(p) {
+  # 諸費用ローン込の場合、借入額に諸費用を加算
   loan_amount <- (p$price * 10000) - (p$down_payment * 10000)
+  if(isTRUE(p$include_cost_in_loan)) {
+    loan_amount <- loan_amount + p$initial_cost_yen
+  }
   if(loan_amount < 0) loan_amount <- 0
   
   loan_schedule <- calculate_amortization(
@@ -72,8 +76,12 @@ run_simulation_logic <- function(p) {
     implied_rate <- (Pt / P0)^(1/t) - 1
   }
   
-  initial_cash_out <- (p$price * 10000 * p$initial_cost_rate / 100) + 
+  # 初期投資額: 諸費用ローン込なら頭金のみ、そうでなければ頭金+諸費用
+  initial_cash_out <- if(isTRUE(p$include_cost_in_loan)) {
     (p$down_payment * 10000)
+  } else {
+    p$initial_cost_yen + (p$down_payment * 10000)
+  }
   
   df <- loan_schedule %>%
     dplyr::mutate(

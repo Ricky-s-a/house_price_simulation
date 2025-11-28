@@ -4,6 +4,12 @@ library(DBI)
 
 db_file <- "investment_sim.db"
 
+# R/fct_db.R
+library(RSQLite)
+library(DBI)
+
+db_file <- "investment_sim.db"
+
 # --- DB初期化 ---
 init_db <- function() {
   con <- dbConnect(RSQLite::SQLite(), db_file)
@@ -23,6 +29,7 @@ init_db <- function() {
       mgmt_fee REAL,
       repair_fund REAL,
       down_payment REAL,
+      include_cost_in_loan INTEGER,
       interest_rate REAL,
       loan_years INTEGER,
       repayment_method TEXT,
@@ -37,6 +44,13 @@ init_db <- function() {
     )
   "
   dbExecute(con, query)
+  
+  # 既存テーブルへのカラム追加（マイグレーション）
+  tryCatch({
+    dbExecute(con, "ALTER TABLE scenarios ADD COLUMN include_cost_in_loan INTEGER DEFAULT 0")
+  }, error = function(e) {
+    # カラムが既に存在する場合は無視
+  })
 }
 
 # --- DBリセット ---
@@ -74,6 +88,7 @@ save_scenario_to_db <- function(inputs, results, memo) {
     mgmt_fee = get_val("mgmt_fee"),
     repair_fund = get_val("repair_fund"),
     down_payment = get_val("down_payment"),
+    include_cost_in_loan = as.integer(get_val("include_cost_in_loan", FALSE)),
     interest_rate = get_val("interest_rate"),
     loan_years = get_val("loan_years"),
     repayment_method = get_val("repayment_method", "元利均等返済"),
@@ -102,5 +117,12 @@ get_scenario_history <- function() {
 get_scenario_by_id <- function(id) {
   con <- dbConnect(RSQLite::SQLite(), db_file)
   on.exit(dbDisconnect(con))
-  dbGetQuery(con, "SELECT * FROM scenarios WHERE id = ?", params = list(id))
+  d <- dbGetQuery(con, "SELECT * FROM scenarios WHERE id = ?", params = list(id))
+  # include_cost_in_loan を論理値に変換
+  if("include_cost_in_loan" %in% names(d)) {
+    d$include_cost_in_loan <- as.logical(d$include_cost_in_loan)
+  } else {
+    d$include_cost_in_loan <- FALSE
+  }
+  return(d)
 }

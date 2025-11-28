@@ -3,105 +3,199 @@
 # UI
 analysisUI <- function(id) {
   ns <- NS(id)
-  navset_card_underline(
-    title = "詳細分析レポート",
-    full_screen = TRUE,
+  
+  # 数式表示を有効化するために tagList でラップ
+  tagList(
+    withMathJax(),
     
-    # [1] 収支・現金 (Cash/PL)
-    nav_panel(
-      title = "収支・現金 (Cash/PL)",
-      icon = icon("money-bill-wave"),
+    navset_card_underline(
+      title = "詳細分析レポート",
+      full_screen = TRUE,
       
-      # 【修正ポイント 1】 fill = FALSE を指定して、画面高さに合わせて潰れないようにする
-      card_body(
-        fill = FALSE, # これが重要です。スクロールを許可します。
+      # [1] 収支・現金 (Cash/PL)
+      nav_panel(
+        title = "収支・現金 (Cash/PL)",
+        icon = icon("money-bill-wave"),
         
-        card_header("手元資金の推移 (累積キャッシュフロー)"),
-        
-        layout_columns(
-          col_widths = c(6, 6),
-          # 【修正ポイント 2】 fill = FALSE で高さをコンテンツに合わせる
-          fill = FALSE, 
+        # 【修正ポイント 1】 fill = FALSE を指定して、画面高さに合わせて潰れないようにする
+        card_body(
+          fill = FALSE, # これが重要です。スクロールを許可します。
           
-          value_box(
-            title = "初期投下資金 (購入時)", 
-            value = textOutput(ns("initial_cash_val")), 
-            showcase = bsicons::bs_icon("wallet-fill"), 
-            theme = "danger", 
-            min_height = "180px", # heightではなくmin_heightに変更
-            p("諸経費 + 頭金")
-          ),
-          value_box(
-            title = "最終到達額 (CFピーク時)", 
-            value = uiOutput(ns("max_cf_detail")), 
-            showcase = bsicons::bs_icon("arrow-up-circle"), 
-            theme = "success", 
-            min_height = "180px", # heightではなくmin_heightに変更
-            p("計算式: 累積CF + (売却額 - 残債)", style="font-size: 0.8rem; margin-top: 5px; color: #ecf0f1;")
-          )
-        ),
-        
-        plotOutput(ns("cf_plot"), height = "300px"),
-        p(class = "text-muted small", "※ 棒グラフがプラス(青)になれば投資回収完了。マイナス(灰)の間は持ち出し状態です。"),
-        
-        hr(),
-        
-        card_header("月次収支の推移 (家賃変動の影響)"),
-        card(class="bg-light", markdown("**初年度 月次収支の内訳:**"), textOutput(ns("cf_breakdown_text"))),
-        plotOutput(ns("monthly_cf_plot"), height = "250px")
-      )
-    ),
-    
-    # [2] 資産・効率 (BS/IRR)
-    nav_panel(
-      title = "資産・効率 (BS/IRR)",
-      icon = icon("chart-pie"),
-      
-      layout_columns(
-        col_widths = c(6, 6),
-        
-        # 左カラム
-        tagList(
-          card(card_header("資産価値 vs ローン残債 (B/S)"), plotOutput(ns("bs_plot"), height="400px"), card_footer(class="text-muted small", "青線(資産)が赤線(借金)より上にあれば健全です。")),
-          card(card_header("変化率の推移"), plotOutput(ns("rate_plot"), height="250px"))
-        ),
-        
-        # 右カラム
-        tagList(
-          card(card_header("売却時の内部収益率 (IRR) 推移"), plotOutput(ns("irr_plot"), height="350px")),
+          card_header("手元資金の推移 (累積キャッシュフロー)"),
           
-          # ここも潰れないように fill = FALSE
           layout_columns(
             col_widths = c(6, 6),
+            # 【修正ポイント 2】 fill = FALSE で高さをコンテンツに合わせる
             fill = FALSE, 
             
             value_box(
-              title="IRRプラス転換 (損益分岐)", 
-              value=uiOutput(ns("irr_breakeven_detail")), 
-              showcase=bsicons::bs_icon("sunrise"), 
-              theme="warning", 
-              min_height="200px", # min_heightに変更
-              p("これ以前に売却すると元本割れ", style="font-size: 0.8rem; color: #ffffff;"), 
-              p("計算式: 累積CF + (売却額 - 残債)", style="font-size: 0.7rem; margin-top: 2px; color: #ffffff;")
+              title = "初期投下資金 (購入時)", 
+              value = textOutput(ns("initial_cash_val")), 
+              showcase = bsicons::bs_icon("wallet-fill"), 
+              theme = "danger", 
+              min_height = "180px", # heightではなくmin_heightに変更
+              p("諸経費 + 頭金")
             ),
             value_box(
-              title="最高効率点 (Max IRR)", 
-              value=uiOutput(ns("irr_max_detail")), 
-              showcase=bsicons::bs_icon("stars"), 
-              theme="primary", 
-              min_height="200px", # min_heightに変更
-              p("資金効率が最も良くなる売り時", style="font-size: 0.8rem; color: #ecf0f1;"), 
-              p("計算式: 累積CF + (売却額 - 残債)", style="font-size: 0.7rem; margin-top: 2px; color: #ecf0f1;")
+              title = "最終到達額 (CFピーク時)", 
+              value = uiOutput(ns("max_cf_detail")), 
+              showcase = bsicons::bs_icon("arrow-up-circle"), 
+              theme = "success", 
+              min_height = "180px", # heightではなくmin_heightに変更
+              p("計算式: 累積CF + (売却額 - 残債)", style="font-size: 0.8rem; margin-top: 5px; color: #ecf0f1;")
+            )
+          ),
+          
+          plotOutput(ns("cf_plot"), height = "300px"),
+          p(class = "text-muted small", "※ 棒グラフがプラス(青)になれば投資回収完了。マイナス(灰)の間は持ち出し状態です。"),
+          
+          hr(),
+          
+          card_header("月次収支の推移 (家賃変動の影響)"),
+          card(class="bg-light", markdown("**初年度 月次収支の内訳:**"), textOutput(ns("cf_breakdown_text"))),
+          plotOutput(ns("monthly_cf_plot"), height = "250px")
+        )
+      ),
+      
+      # [2] 資産・効率 (BS/IRR)
+      nav_panel(
+        title = "資産・効率 (BS/IRR)",
+        icon = icon("chart-pie"),
+        
+        layout_columns(
+          col_widths = c(6, 6),
+          
+          # 左カラム
+          tagList(
+            card(card_header("資産価値 vs ローン残債 (B/S)"), plotOutput(ns("bs_plot"), height="400px"), card_footer(class="text-muted small", "青線(資産)が赤線(借金)より上にあれば健全です。")),
+            card(card_header("変化率の推移"), plotOutput(ns("rate_plot"), height="250px"))
+          ),
+          
+          # 右カラム
+          tagList(
+            card(card_header("売却時の内部収益率 (IRR) 推移"), plotOutput(ns("irr_plot"), height="350px")),
+            
+            # ここも潰れないように fill = FALSE
+            layout_columns(
+              col_widths = c(6, 6),
+              fill = FALSE, 
+              
+              value_box(
+                title="IRRプラス転換 (損益分岐)", 
+                value=uiOutput(ns("irr_breakeven_detail")), 
+                showcase=bsicons::bs_icon("sunrise"), 
+                theme="warning", 
+                min_height="200px", # min_heightに変更
+                p("これ以前に売却すると元本割れ", style="font-size: 0.8rem; color: #ffffff;"), 
+                p("計算式: 累積CF + (売却額 - 残債)", style="font-size: 0.7rem; margin-top: 2px; color: #ffffff;")
+              ),
+              value_box(
+                title="最高効率点 (Max IRR)", 
+                value=uiOutput(ns("irr_max_detail")), 
+                showcase=bsicons::bs_icon("stars"), 
+                theme="primary", 
+                min_height="200px", # min_heightに変更
+                p("資金効率が最も良くなる売り時", style="font-size: 0.8rem; color: #ecf0f1;"), 
+                p("計算式: 累積CF + (売却額 - 残債)", style="font-size: 0.7rem; margin-top: 2px; color: #ecf0f1;")
+              )
+            )
+          )
+        )
+      ),
+      
+
+      
+      # その他のタブ
+      nav_panel(title="総合収益 (Return)", card_header("マンション収益推移"), plotOutput(ns("profit_plot"), height="400px"), textOutput(ns("cagr_info"))),
+      nav_panel(title="返済額推移 (Payment)", card_header("月々の返済額"), plotOutput(ns("payment_plot"), height="400px")),
+      nav_panel(title="データ一覧 (Table)", card_header("詳細データ & 売却時IRR"), DTOutput(ns("raw_table"))),
+      
+      # [3] 解説・ロジック (Docs) - NEW
+      nav_panel(
+        title = "解説・ロジック (Docs)",
+        icon = icon("book"),
+        
+        accordion(
+          open = TRUE, # デフォルトですべて開く設定（必要に応じてFALSEや特定のID指定も可）
+          
+          # セクション1: 📊 重要な指標の定義と見方
+          accordion_panel(
+            "📊 重要な指標の定義と見方",
+            
+            # パネル1: IRR
+            card(
+              card_header("1. IRR (内部収益率) とは？"),
+              card_body(
+                p("説明文: 投資期間中の資金効率を示す指標。銀行預金の「複利利回り」に相当します。「お金をどれだけ効率よく増やせたか」を年率で表したものです。"),
+                p(style="font-weight: bold;", "数式:"),
+                div("$$\\sum_{t=1}^{N} \\frac{CF_t}{(1+r)^t} - InitialCost = 0$$"),
+                tags$ul(
+                  tags$li("プラスなら成功、マイナスなら元本割れ"),
+                  tags$li("グラフの頂点が最適売り時")
+                ),
+                div(class="alert alert-warning", style="margin-top: 15px; font-size: 0.9rem;",
+                  tags$strong("⚠️ 注意点: 頭金が少ない場合"),
+                  p("IRRは「初期投資額に対してどれだけ増えたか」を計算する指標です。そのため、頭金がゼロに近い（フルローン等の）場合、計算の分母が極端に小さくなり、数値が異常に高く出たり（数千%など）、計算不能になることがあります。"),
+                  p("本シミュレーターでは「諸経費」を初期投資とみなして計算しますが、頭金が少ない場合は数値が敏感に変動するため、あくまで参考値としてご覧ください。")
+                )
+              )
+            ),
+            
+            # パネル2: 損益分岐点賃料
+            card(
+              card_header("2. 損益分岐点賃料 (Break-even Rent)"),
+              card_body(
+                p("説明文: ローン返済と維持費を賄うための最低限必要な家賃。"),
+                div("$$Rent_{min} = PMT(Loan) + MgmtFee + RepairFund$$")
+              )
+            ),
+            
+            # パネル3: 表面利回り
+            card(
+              card_header("3. 表面利回り (Gross Yield)"),
+              card_body(
+                p("説明文: 物件価格に対する年間家賃収入の割合。最も基本的な指標ですが、空室や経費を考慮していないため、実際の収益性はこれより低くなります。"),
+                div("$$Yield_{gross} = \\frac{MonthlyRent \\times 12}{Price} \\times 100$$")
+              )
+            ),
+
+            # パネル4: 実質利回り
+            card(
+              card_header("4. 実質利回り (NOI Yield)"),
+              card_body(
+                p("説明文: 表面利回りから空室リスクとコストを引いた現実的な利回り。"),
+                div("$$Yield_{net} = \\frac{(Rent \\times Occupancy) - (Mgmt + Repair)}{Price} \\times 100$$")
+              )
+            ),
+            
+            # パネル5: マンション収益
+            card(
+              card_header("5. マンション収益 (Total Profit)"),
+              card_body(
+                p("説明文: 運用期間中の「累積キャッシュフロー」と、売却時の「手残り金額（売却額 - 残債）」の合計。投資全体での最終的な損益額を表します。"),
+                div("$$Profit = CumulativeCF + (Price_{sell} - Loan_{balance})$$"),
+                p(class="text-muted small", "※ 税引前の金額です。実際の利益はここから譲渡所得税等が引かれます。")
+              )
+            )
+          ),
+          
+          # セクション2: 🧮 シミュレーションの計算ロジック
+          accordion_panel(
+            "🧮 シミュレーションの計算ロジック",
+            card(
+              card_header("前提条件"),
+              card_body(
+                markdown("
+- **キャッシュフロー**: 収入（実効賃料）ー 支出（返済+管理修繕）。税金は簡易的に管理費に含む想定。
+- **資産価値**: 定額法、定率法、またはターゲット価格に基づくCAGRで推移。
+- **出口戦略**: 税引前（Pre-tax）の計算であること。売却益には別途税金がかかる旨の注記。
+                ")
+              )
             )
           )
         )
       )
-    ),
-    
-    # その他のタブ
-    nav_panel(title="総合収益 (Return)", card_header("マンション収益推移"), plotOutput(ns("profit_plot"), height="400px"), textOutput(ns("cagr_info"))),
-    nav_panel(title="返済額推移 (Payment)", card_header("月々の返済額"), plotOutput(ns("payment_plot"), height="400px")),
-    nav_panel(title="データ一覧 (Table)", card_header("詳細データ & 売却時IRR"), DTOutput(ns("raw_table")))
+    )
   )
 }
 

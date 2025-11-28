@@ -60,7 +60,17 @@ ui <- page_sidebar(
                         tags$summary("詳細設定 (諸経費・リスク)", style = "cursor: pointer; font-weight: bold; color: #7f8c8d;"),
                         
                         div(style = "margin-top: 10px;",
-                            numericInput("initial_cost_rate", "購入諸経費率 (%)", value=7, step=0.5),
+                            tags$label("諸経費入力モード", class="control-label"),
+                            radioButtons("initial_cost_mode", NULL, choices=c("率指定 (%)"="rate", "金額指定 (万円)"="amount"), inline=TRUE, selected="rate"),
+                            
+                            conditionalPanel(
+                              condition = "input.initial_cost_mode == 'rate'",
+                              numericInput("initial_cost_rate", "諸経費率 (%)", value=7, step=0.5)
+                            ),
+                            conditionalPanel(
+                              condition = "input.initial_cost_mode == 'amount'",
+                              numericInput("initial_cost_amount", "諸経費額 (万円)", value=400, step=10)
+                            ),
                             
                             tags$label("賃料変動・稼働率 (リスク)", class="control-label", style="margin-top: 10px;"),
                             div(class="p-2 bg-white border rounded",
@@ -73,6 +83,7 @@ ui <- page_sidebar(
       
       accordion_panel("2. 借入条件", icon=icon("bank"),
                       numericInput("down_payment", "頭金 (万円)", value=0, step=100),
+                      checkboxInput("include_cost_in_loan", "諸費用もローンに含める (オーバーローン)", value = FALSE),
                       sliderInput("interest_rate", "金利 (%)", min=0.1, max=5.0, value=1.0, step=0.1),
                       sliderInput("loan_years", "借入期間 (年)", min=10, max=50, value=35, step=1),
                       radioButtons("repayment_method", "返済方式:", choices=c("元利均等返済", "元本均等返済"))
@@ -106,14 +117,19 @@ server <- function(input, output, session) {
   # A. シミュレーションロジック
   sim_data <- eventReactive(input$calc, {
     params <- list(
-      price = input$price, down_payment = input$down_payment,
+      price = input$price, down_payment = input$down_payment, include_cost_in_loan = input$include_cost_in_loan,
       initial_cost_rate = input$initial_cost_rate, monthly_rent = input$monthly_rent,
       rent_decline_rate = input$rent_decline_rate, occupancy_rate = input$occupancy_rate,
       mgmt_fee = input$mgmt_fee, repair_fund = input$repair_fund,
       interest_rate = input$interest_rate, loan_years = input$loan_years, repayment_method = input$repayment_method,
       drop_type = input$drop_type, depreciation_rate = input$depreciation_rate,
       appreciation_rate = input$appreciation_rate, target_year = input$target_year, target_price_val = input$target_price_val,
-      area_m2 = input$area_m2
+      area_m2 = input$area_m2,
+      initial_cost_yen = if(input$initial_cost_mode == "rate") {
+        (input$price * 10000) * (input$initial_cost_rate / 100)
+      } else {
+        input$initial_cost_amount * 10000
+      }
     )
     run_simulation_logic(params)
   }, ignoreNULL = FALSE)
@@ -121,9 +137,10 @@ server <- function(input, output, session) {
   input_params <- reactive({
     list(
       price = input$price, area_m2 = input$area_m2, monthly_rent = input$monthly_rent, 
-      initial_cost_rate = input$initial_cost_rate, mgmt_fee = input$mgmt_fee, repair_fund = input$repair_fund,
+      initial_cost_rate = if(input$initial_cost_mode == "rate") input$initial_cost_rate else (input$initial_cost_amount / input$price * 100),
+      mgmt_fee = input$mgmt_fee, repair_fund = input$repair_fund,
       rent_decline_rate = input$rent_decline_rate, occupancy_rate = input$occupancy_rate,
-      down_payment = input$down_payment, interest_rate = input$interest_rate, 
+      down_payment = input$down_payment, include_cost_in_loan = input$include_cost_in_loan, interest_rate = input$interest_rate, 
       loan_years = input$loan_years, repayment_method = input$repayment_method,
       drop_type = input$drop_type, depreciation_rate = input$depreciation_rate, 
       appreciation_rate = input$appreciation_rate, target_year = input$target_year, target_price_val = input$target_price_val
@@ -198,6 +215,7 @@ server <- function(input, output, session) {
       if(nrow(d) > 0) {
         updateNumericInput(session, "price", value = d$price)
         updateNumericInput(session, "area_m2", value = d$area_m2)
+        updateRadioButtons(session, "initial_cost_mode", selected = "rate")
         updateNumericInput(session, "initial_cost_rate", value = d$initial_cost_rate)
         updateNumericInput(session, "monthly_rent", value = d$monthly_rent)
         updateSliderInput(session, "rent_decline_rate", value = d$rent_decline_rate)
@@ -205,6 +223,7 @@ server <- function(input, output, session) {
         updateNumericInput(session, "mgmt_fee", value = d$mgmt_fee)
         updateNumericInput(session, "repair_fund", value = d$repair_fund)
         updateNumericInput(session, "down_payment", value = d$down_payment)
+        updateCheckboxInput(session, "include_cost_in_loan", value = if(!is.null(d$include_cost_in_loan)) d$include_cost_in_loan else FALSE)
         updateSliderInput(session, "interest_rate", value = d$interest_rate)
         updateSliderInput(session, "loan_years", value = d$loan_years)
         updateRadioButtons(session, "repayment_method", selected = d$repayment_method)
